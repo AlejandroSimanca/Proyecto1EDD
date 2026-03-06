@@ -6,7 +6,6 @@ package estructuras;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
 import org.graphstream.graph.*;
 import org.graphstream.graph.implementations.*;
 import org.graphstream.ui.view.Viewer;
@@ -90,6 +89,12 @@ public class VentanaPrincipal extends JFrame {
             }
         });
 
+        btnGuardar.addActionListener(e -> {
+            if (validarGrafo()) {
+                gestor.guardarGrafoEnArchivo(grafo);
+            }
+        });
+
         btnHubs.addActionListener(e -> {
             if (validarGrafo()) {
                 areaResultados.append("\n[ANÁLISIS DE HUBS]\n" + grafo.identificarHubs() + "\n");
@@ -114,33 +119,41 @@ public class VentanaPrincipal extends JFrame {
 
         btnVisualizar.addActionListener(e -> visualizarGrafo());
 
-        btnEliminarP.addActionListener(e -> {
-            String nombre = JOptionPane.showInputDialog(this, "Proteína a eliminar:");
-            if (nombre != null) {
-                grafo.eliminarProteina(nombre.trim());
-                areaResultados.append(">>> " + nombre + " ha sido removida del grafo.\n");
-            }
-        });
-        
         btnAgregarP.addActionListener(e -> {
             String nombre = JOptionPane.showInputDialog(this, "Nombre de nueva proteína:");
             if (nombre != null && !nombre.trim().isEmpty()) {
                 grafo.insertarProteina(nombre.trim());
-                areaResultados.append(">>> Proteína " + nombre + " agregada.\n");
+                areaResultados.append(">>> Proteína " + nombre + " agregada correctamente.\n");
+            }
+        });
+
+        btnEliminarP.addActionListener(e -> {
+            if (validarGrafo()) {
+                String nombre = JOptionPane.showInputDialog(this, "Proteína a eliminar:");
+                if (nombre != null) {
+                    grafo.eliminarProteina(nombre.trim());
+                    areaResultados.append(">>> " + nombre + " y sus conexiones han sido removidas.\n");
+                }
             }
         });
 
         btnAgregarI.addActionListener(e -> {
-            String p1 = JOptionPane.showInputDialog(this, "Proteína 1:");
-            String p2 = JOptionPane.showInputDialog(this, "Proteína 2:");
-            String pS = JOptionPane.showInputDialog(this, "Peso de la interacción:");
-            if (p1 != null && p2 != null && pS != null) {
-                grafo.insertarInteraccion(p1.trim(), p2.trim(), Integer.parseInt(pS.trim()));
-                areaResultados.append(">>> Interacción agregada entre " + p1 + " y " + p2 + ".\n");
+            if (validarGrafo()) {
+                String p1 = JOptionPane.showInputDialog(this, "Proteína de Origen:");
+                String p2 = JOptionPane.showInputDialog(this, "Proteína de Destino:");
+                String pS = JOptionPane.showInputDialog(this, "Peso de la interacción (número):");
+                
+                try {
+                    if (p1 != null && p2 != null && pS != null) {
+                        int peso = Integer.parseInt(pS.trim());
+                        grafo.insertarInteraccion(p1.trim(), p2.trim(), peso);
+                        areaResultados.append(">>> Nueva interacción: " + p1 + " <-> " + p2 + " (Peso: " + peso + ")\n");
+                    }
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(this, "El peso debe ser un número entero.");
+                }
             }
         });
-        
-        btnGuardar.addActionListener(e -> gestor.guardarGrafoEnArchivo(grafo));
     }
 
     private JButton crearBoton(String texto, Color colorFondo) {
@@ -157,7 +170,7 @@ public class VentanaPrincipal extends JFrame {
 
     private boolean validarGrafo() {
         if (grafo == null || grafo.estaVacio()) {
-            JOptionPane.showMessageDialog(this, "Error: El grafo está vacío.", "Aviso", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Error: El grafo está vacío. Cargue datos primero.", "Aviso", JOptionPane.WARNING_MESSAGE);
             return false;
         }
         return true;
